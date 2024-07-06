@@ -1,0 +1,55 @@
+name: alert-notification
+
+on: 
+  workflow_dispatch:
+    inputs:
+      payload:
+        description: 'JSON Payload'
+        required: true
+
+jobs: 
+  run-script:
+    runs-on: macOS-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Check if Operation is Create
+        id: check-operation
+        run: |
+          operation=$(echo "${{ toJsnon(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.operation'
+          if[["$operation"=="Create"]]; then
+            echo "Operation is Create"
+          else 
+            echo "Operation is not Create. Skip"
+            exit 0
+          fi
+
+      - name: Extract data and create attachment
+        if: steps.check-operation.outputs['check-operation'] == "Operation is Create"
+        id: extract-data
+        run: | 
+          data=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.moduleData.toolData.additionalData')
+          echo "$data" > output.txt
+
+      - name: Extract Namespace Value
+        id: extract-namespace
+        run: |
+          namespace=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.projectKey')
+          echo "Namespace=$namespace" >> $GITHUB_ENV
+
+      - name: Send mail
+        if: steps.check-operation.outputs['check-operation'] == "Operation is Create"
+        uses: dawidd6/actions-send-mail@v3
+        with:
+          server_address: https://mail.google.com
+          server_port: 587
+          secure: false
+          subject: "test actions"
+          to: snehilkumar4c@gmail.com
+          from: snehilkumar4c@gmail.com
+          body: |
+            "details are attached to the mail"
+          attachments: SA-Details/${{ env.Namespace }}.txt
+          
+      
