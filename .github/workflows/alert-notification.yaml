@@ -17,7 +17,7 @@ jobs:
       - name: Check if operation is Create
         id: check-operation
         run: |
-          operation=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.operation'
+          operation=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.operation')
           if[["$operation"=="Create"]]; then
             echo "Operation is Create"
           else 
