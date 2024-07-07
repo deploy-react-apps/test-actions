@@ -10,7 +10,6 @@ on:
 jobs: 
   run-script:
     runs-on: macOS-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -18,7 +17,7 @@ jobs:
       - name: Check if operation is Create
         id: check-operation
         run: |
-          operation=$(echo "${{ toJson(github.event.inputs.payload) }}" | jq -r '.operation')
+          operation=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.operation')
           if [[ "$operation" == "Create" ]]; then
             echo "Operation is Create"
           else 
@@ -27,24 +26,31 @@ jobs:
           fi
 
       - name: Extract data
+        if: steps.check-operation.outputs['check-operation'] == 'Operation is Create'
+        id: extract-data
         run: | 
-          export DATA=$(echo "${{ toJson(github.event.inputs.payload) }}" | jq -r '.moduleData.toolData.additionalData')
+          # Extract data and store in environment variable
+          data=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.moduleData.toolData.additionalData')
+          echo "DATA=$data" >> $GITHUB_ENV
 
       - name: Extract Namespace Value
+        id: extract-namespace
         run: |
-          export NAMESPACE=$(echo "${{ toJson(github.event.inputs.payload) }}" | jq -r '.projectKey')
+          # Extract namespace and store in environment variable
+          namespace=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.projectKey')
+          echo "NAMESPACE=$namespace" >> $GITHUB_ENV
 
       - name: Send email
+        if: steps.check-operation.outputs['check-operation'] == 'Operation is Create'
         uses: dawidd6/action-send-mail@v3.12.0
         with:
           server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.GMAIL_USERNAME }}
-          password: ${{ secrets.GMAIL_PASSWORD }}
+          server_port: 465
           secure: true
           subject: "test actions"
-          to: thelumberjacks246@gmail.com
-          from: snehilkumar4c@gmail.com
+          to: snehilkumar4c@gmail.com
+          from: ${{ secrets.GMAIL_USERNAME}}
+          password: ${{ secrets.GMAIL_PASSWORD }}
           tls: true
           body: |
             Operation: Create
