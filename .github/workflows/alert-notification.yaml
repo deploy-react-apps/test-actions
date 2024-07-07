@@ -45,6 +45,7 @@ jobs:
           subject: "test actions"
           to: thelumberjacks246@gmail.com
           from: snehilkumar4c@gmail.com
+          tls: true
           body: |
             Operation: Create
             
@@ -52,5 +53,4 @@ jobs:
             
             Additional Details:
             ${{ env.DATA }}
-          tls: true  
           ignore_cert: true
