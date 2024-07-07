@@ -21,7 +21,7 @@ jobs:
       - name: Check if operation is Create
         id: check-operation
         run: |
-          operation=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.operation')
+          operation=$(echo "${{ toJson(github.event.inputs.payload) }}" | jq -r '.operation')
           if [[ "$operation" == "Create" ]]; then
             echo "Operation is Create"
           else 
@@ -31,18 +31,18 @@ jobs:
 
       - name: Extract data
         run: | 
-          export DATA=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.moduleData.toolData.additionalData')
+          export DATA=$(echo "${{ toJson(github.event.inputs.payload) }}" | jq -r '.moduleData.toolData.additionalData')
 
       - name: Extract Namespace Value
         run: |
-          export NAMESPACE=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.projectKey')
+          export NAMESPACE=$(echo "${{ toJson(github.event.inputs.payload) }}" | jq -r '.projectKey')
 
       - name: Send email
         if: steps.check-operation.outputs.check-operation == 'Operation is Create'
         uses: dawidd6/action-send-mail@v3.12.0
         with:
-          server_address: https://mail.google.com
-          server_port: 587
+          server_address: smtp.gmail.com
+          server_port: 465
           secure: false
           subject: "test actions"
           to: snehilkumar4c@gmail.com
