@@ -10,6 +10,10 @@ on:
 jobs: 
   run-script:
     runs-on: macOS-latest
+    env:
+      DATA: ''
+      NAMESPACE: ''
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -25,17 +29,13 @@ jobs:
             exit 0
           fi
 
-      - name: Extract data and create attachment
-        id: extract-data
+      - name: Extract data
         run: | 
-          data=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.moduleData.toolData.additionalData')
-          echo "$data" > output.txt
+          export DATA=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.moduleData.toolData.additionalData')
 
       - name: Extract Namespace Value
-        id: extract-namespace
         run: |
-          namespace=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.projectKey')
-          echo "Namespace=$namespace" >> $GITHUB_ENV
+          export NAMESPACE=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.projectKey')
 
       - name: Send email
         if: steps.check-operation.outputs.check-operation == 'Operation is Create'
@@ -48,6 +48,11 @@ jobs:
           to: snehilkumar4c@gmail.com
           from: snehilkumar4c@gmail.com
           body: |
-            "Details are attached to the mail"
-          attachments: SA-Details/${{ env.Namespace }}.txt
+            Operation: Create
+            
+            Namespace: ${{ env.NAMESPACE }}
+            
+            Additional Details:
+            ${{ env.DATA }}
+            
           ignore_cert: true
