@@ -46,6 +46,7 @@ jobs:
           subject: "test actions"
           to: snehilkumar4c@gmail.com
           from: snehilkumar4c@gmail.com
+          password: ${{ secrets.GMAIL_PASSWORD }}
           body: |
             Operation: Create
             
