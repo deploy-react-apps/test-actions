@@ -38,7 +38,6 @@ jobs:
           export NAMESPACE=$(echo "${{ toJson(github.event.inputs.payload) }}" | jq -r '.projectKey')
 
       - name: Send email
-        if: steps.check-operation.outputs.check-operation == 'Operation is Create'
         uses: dawidd6/action-send-mail@v3.12.0
         with:
           server_address: smtp.gmail.com
