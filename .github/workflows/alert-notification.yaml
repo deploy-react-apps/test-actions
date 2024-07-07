@@ -14,7 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Check if Operation is Create
+      - name: "Check if 'Operation is Create"
         id: check-operation
         run: |
           operation=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.operation'
