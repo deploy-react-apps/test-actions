@@ -10,9 +10,6 @@ on:
 jobs: 
   run-script:
     runs-on: macOS-latest
-    env:
-      DATA: ''
-      NAMESPACE: ''
 
     steps:
       - name: Checkout
@@ -41,12 +38,13 @@ jobs:
         uses: dawidd6/action-send-mail@v3.12.0
         with:
           server_address: smtp.gmail.com
-          server_port: 465
+          server_port: 587
+          username: ${{ secrets.GMAIL_USERNAME }}
+          password: ${{ secrets.GMAIL_PASSWORD }}
           secure: true
           subject: "test actions"
           to: thelumberjacks246@gmail.com
           from: snehilkumar4c@gmail.com
-          password: ${{ secrets.GMAIL_PASSWORD }}
           body: |
             Operation: Create
             
@@ -54,5 +52,5 @@ jobs:
             
             Additional Details:
             ${{ env.DATA }}
-            
+          tls: true  
           ignore_cert: true
