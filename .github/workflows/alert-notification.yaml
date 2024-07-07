@@ -14,42 +14,54 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Validate JSON
+        id: validate-json
+        run: |
+          json_data="${{ toJson(github.event.inputs.payload) }}"
+          if jq -e . <<< "$json_data" > /dev/null; then
+            echo "JSON validation successful."
+          else
+            echo "Invalid JSON format detected."
+            exit 1
+          fi
+
       - name: Check if operation is Create
         id: check-operation
+        if: success()  # Ensure JSON is valid before proceeding
         run: |
-          operation=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.operation')
+          operation=$(echo "$json_data" | jq -r '.operation')
           if [[ "$operation" == "Create" ]]; then
             echo "Operation is Create"
+            echo "::set-output name=operation::true"  # Set output for conditional steps
           else 
             echo "Operation is not Create. Skip"
-            exit 0
+            echo "::set-output name=operation::false"  # Set output for conditional steps
           fi
 
       - name: Extract data
-        if: steps.check-operation.outputs['check-operation'] == 'Operation is Create'
         id: extract-data
+        if: steps.check-operation.outputs.operation == 'true'
         run: | 
-          # Extract data and store in environment variable
-          data=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.moduleData.toolData.additionalData')
+          data=$(echo "$json_data" | jq -r '.moduleData.toolData.additionalData')
           echo "DATA=$data" >> $GITHUB_ENV
 
       - name: Extract Namespace Value
         id: extract-namespace
+        if: steps.check-operation.outputs.operation == 'true'
         run: |
-          # Extract namespace and store in environment variable
-          namespace=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.projectKey')
+          namespace=$(echo "$json_data" | jq -r '.projectKey')
           echo "NAMESPACE=$namespace" >> $GITHUB_ENV
 
       - name: Send email
-        if: steps.check-operation.outputs['check-operation'] == 'Operation is Create'
+        if: steps.check-operation.outputs.operation == 'true'
         uses: dawidd6/action-send-mail@v3.12.0
         with:
           server_address: smtp.gmail.com
           server_port: 465
           secure: true
-          subject: "test actions"
+          subject: "Test Actions: Operation Create"
           to: snehilkumar4c@gmail.com
-          from: ${{ secrets.GMAIL_USERNAME}}
+          from: ${{ secrets.GMAIL_USERNAME }}
           password: ${{ secrets.GMAIL_PASSWORD }}
           tls: true
           body: |
