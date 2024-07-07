@@ -51,5 +51,5 @@ jobs:
           body: |
             "details are attached to the mail"
           attachments: SA-Details/${{ env.Namespace }}.txt
-          
+          ignore_cert: true
       
