@@ -26,7 +26,7 @@ jobs:
           fi
 
       - name: Extract data and create attachment
-        if: steps.check-operation.outputs['check-operation'] == "Operation is Create"
+        if: steps.check-operation.outputs['check-operation'] == "'Operation is Create"
         id: extract-data
         run: | 
           data=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.moduleData.toolData.additionalData')
@@ -39,7 +39,7 @@ jobs:
           echo "Namespace=$namespace" >> $GITHUB_ENV
 
       - name: Send mail
-        if: steps.check-operation.outputs['check-operation'] == "Operation is Create"
+        if: steps.check-operation.outputs['check-operation'] == "'Operation is Create"
         uses: dawidd6/actions-send-mail@v3
         with:
           server_address: https://mail.google.com
