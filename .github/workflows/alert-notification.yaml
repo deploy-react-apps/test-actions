@@ -1,74 +1,60 @@
-name: alert-notification
+name: Process JSON Payload
 
-on: 
+on:
   workflow_dispatch:
     inputs:
       payload:
         description: 'JSON Payload'
         required: true
 
-jobs: 
-  run-script:
-    runs-on: macOS-latest
+jobs:
+  process-json:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Validate JSON
-        id: validate-json
+      - name: Extract Operation
+        id: extract-operation
         run: |
-          json_data="${{ toJson(github.event.inputs.payload) }}"
-          if jq -e . <<< "$json_data" > /dev/null; then
-            echo "JSON validation successful."
-          else
-            echo "Invalid JSON format detected."
-            exit 1
-          fi
-
-      - name: Check if operation is Create
-        id: check-operation
-        if: success()  # Ensure JSON is valid before proceeding
-        run: |
+          json_data="${{ github.event.inputs.payload }}"
           operation=$(echo "$json_data" | jq -r '.operation')
-          if [[ "$operation" == "Create" ]]; then
-            echo "Operation is Create"
-            echo "::set-output name=operation::true"  # Set output for conditional steps
-          else 
-            echo "Operation is not Create. Skip"
-            echo "::set-output name=operation::false"  # Set output for conditional steps
-          fi
+          echo "Operation: $operation"
+          echo "::set-output name=operation::$operation"
 
-      - name: Extract data
+      - name: Extract Data
         id: extract-data
-        if: steps.check-operation.outputs.operation == 'true'
-        run: | 
-          data=$(echo "$json_data" | jq -r '.moduleData.toolData.additionalData')
-          echo "DATA=$data" >> $GITHUB_ENV
-
-      - name: Extract Namespace Value
-        id: extract-namespace
-        if: steps.check-operation.outputs.operation == 'true'
         run: |
-          namespace=$(echo "$json_data" | jq -r '.projectKey')
-          echo "NAMESPACE=$namespace" >> $GITHUB_ENV
+          json_data="${{ github.event.inputs.payload }}"
+          data=$(echo "$json_data" | jq -r '.moduleData.toolData.additionalData')
+          echo "Additional Data: $data"
+          echo "::set-output name=data::$data"
 
-      - name: Send email
-        if: steps.check-operation.outputs.operation == 'true'
+      - name: Extract Namespace
+        id: extract-namespace
+        run: |
+          json_data="${{ github.event.inputs.payload }}"
+          namespace=$(echo "$json_data" | jq -r '.projectKey')
+          echo "Namespace: $namespace"
+          echo "::set-output name=namespace::$namespace"
+
+      - name: Send Email
+        if: steps.extract-operation.outputs.operation == 'Create'
         uses: dawidd6/action-send-mail@v3.12.0
         with:
           server_address: smtp.gmail.com
           server_port: 465
           secure: true
-          subject: "Test Actions: Operation Create"
-          to: snehilkumar4c@gmail.com
-          from: ${{ secrets.GMAIL_USERNAME }}
+          subject: "Process JSON Payload"
+          to: your-email@example.com
+          from: your-gmail-account@gmail.com
           password: ${{ secrets.GMAIL_PASSWORD }}
           tls: true
           body: |
-            Operation: Create
+            Operation: ${{ steps.extract-operation.outputs.operation }}
             
-            Namespace: ${{ env.NAMESPACE }}
+            Namespace: ${{ steps.extract-namespace.outputs.namespace }}
             
             Additional Details:
-            ${{ env.DATA }}
+            ${{ steps.extract-data.outputs.data }}
           ignore_cert: true
