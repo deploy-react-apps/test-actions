@@ -38,9 +38,9 @@ jobs:
           namespace=$(echo "${{ toJson(github.event.inputs.payload) }}" | tr -d '\r' | jq -r '.projectKey')
           echo "Namespace=$namespace" >> $GITHUB_ENV
 
-      - name: Send mail
+      - name: Send email
         if: steps.check-operation.outputs['check-operation'] == 'Operation is Create.'
-        uses: dawidd6/actions-send-mail@v3
+        uses: dawidd6/action-send-mail@v3.12.0
         with:
           server_address: https://mail.google.com
           server_port: 587
