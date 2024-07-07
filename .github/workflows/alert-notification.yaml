@@ -43,7 +43,7 @@ jobs:
         with:
           server_address: smtp.gmail.com
           server_port: 465
-          secure: false
+          secure: true
           subject: "test actions"
           to: snehilkumar4c@gmail.com
           from: snehilkumar4c@gmail.com
